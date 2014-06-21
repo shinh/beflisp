@@ -1,7 +1,10 @@
 BefLisp
 =======
 
-Lisp implementation in Befunge, based on LLVM to Befunge compiler
+Lisp implementation in Befunge
+
+beflisp.bef is the Lisp interpreter in Befunge, and bc2bef.cc is the
+translator from LLVM bit code to Befunge.
 
 
 How to Use
@@ -187,3 +190,13 @@ when you pass a broken Lisp code.
 
 beflisp.bef only uses Befunge-93 operations, but cannot run with
 Befunge-93's small address space.
+
+It seems all test code works with
+[cfunge](http://sourceforge.net/projects/cfunge/)
+but the Lisp interpreter can only handle specific programs. Not sure
+why.
+
+    $ echo '(if 1 9 7)' | cfunge beflisp.bef
+    9  # works
+    $ echo '(+ 9 7)' | cfunge beflisp.bef
+    # hangs
