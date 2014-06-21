@@ -1,0 +1,36 @@
+       89*9*9*9*00p89*9*9*9*9*10p89*9*9*9*20p1v
+v     <                                       <
+                    *** retNull *** 0
+                    block 0
+                      ret i8* null
+>:#v_$ 0\ v
+v-1<  ^   <
+                    *** main *** 1
+                    block 1
+                      %1 = alloca i32, align 4
+                      store i32 0, i32* %1
+                      %2 = call i8* @retNull() #3
+                      %3 = icmp ne i8* %2, null
+                      br i1 %3, label %4, label %9
+>:#v_$ 00g:1+00p20g0+:9%\9/p 020g0+:9%\9/g:9%9+\9/p 2020g19*5++20pv
+v-1<  ^                                                           <
+>:#v_$ 20g19*5+-20p20g2+:9%\9/p 20g2+:9%\9/g0-!!20g3+:9%\9/p 4320g3+:9%\9/gv
+v-1<  ^                                                           $_\# 0#!<<
+                    block 3
+                      %5 = call i32 @putchar(i32 70) #3
+                      %6 = call i32 @putchar(i32 65) #3
+                      %7 = call i32 @putchar(i32 73) #3
+                      %8 = call i32 @putchar(i32 76) #3
+                      br label %12
+>:#v_$ 79*7+,020g5+:9%\9/p 79*2+,020g6+:9%\9/p 89*1+,020g7+:9%\9/p 89*4+,020g8v
+v-1<  ^                                                             5 p/9\%9:+<
+                    block 4
+                      %10 = call i32 @putchar(i32 79) #3
+                      %11 = call i32 @putchar(i32 75) #3
+                      br label %12
+>:#v_$ 89*7+,020g19*1++:9%\9/p 89*3+,020g19*2++:9%\9/p 5 v
+v-1<  ^                                                  <
+                    block 5
+                      ret i32 0
+>:#v_$ 00g1-00p@ v
+v-1<  ^          <
