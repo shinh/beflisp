@@ -99,7 +99,7 @@ implementation:
     42
     (eval (quote (defun fact (n) (if (eq n 0) 1 (* n (fact (- n 1)))))))
     (fact (lambda (n) (if (eq n 0) 1 (* n (fact (- n 1))))))
-    (eval (quote (fact 4)))  ; Takes 3 minutes.
+    (eval (quote (fact 4)))  ; Takes 1 minute.
     24
 
 This essentially means we have a Lisp interpreter in Lisp. evalify.rb
@@ -112,14 +112,14 @@ Lisp. You can run the FizzBuzz program like:
     2
     Fizz
 
-This takes very long time.
+This takes very long time. For me, it took 20 minutes.
 
 Though beflisp.bef does not support defmacro, eval.l also defines
 defmacro:
 
     $ ./evalify.rb | ./befunge beflisp.bef
     (defmacro let (l e) (cons (cons lambda (cons (cons (car l) nil) (cons e nil))) (cons (car (cdr l)) nil)))
-    (let (x 42) (+ x 7))  ; Hit ^d after this. Takes 2 mins.
+    (let (x 42) (+ x 7))  ; Hit ^d after this. Takes 1 mins.
     ...
     49
     $ ./evalify.rb | ./befunge beflisp.bef
@@ -127,7 +127,7 @@ defmacro:
     (defun cadr (a) (car (cdr a)))
     (defmacro cond (l) (if l (cons if (cons (car (car l)) (cons (cadr (car l)) (cons (cons (quote cond) (list0 (cdr l))))))) nil))
     (defun fb (n) (cond (((eq (mod n 5) 0) "Buzz") ((eq (mod n 3) 0) "Fizz") (t n))))
-    (fb 18)  ; Hit ^d after this. Takes 7 minutes
+    (fb 18)  ; Hit ^d after this. Takes 2 minutes
     ...
     "Fizz"
 
