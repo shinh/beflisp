@@ -42,7 +42,7 @@ $(TBINS): %: %.c Makefile libef.h
 	gcc -g $(CFLAGS) $< -o $@
 
 $(TBEFS): %.bef: %.o bc2bef Makefile
-	./bc2bef $< > $@ 2> err || (cat err; rm $@; exit 1)
+	./bc2bef -g $< > $@ 2> err || (cat err; rm $@; exit 1)
 
 test: all
 	./test_bef.rb $(TESTS)

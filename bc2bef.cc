@@ -38,6 +38,8 @@ static const int kStackPos = 9 * 9 * 9 * 9 * 8;
 static const int kGlobalPos = 9 * 9 * 9 * 9 * 9 * 6;
 static const int kHeapPos = 9 * 9 * 9 * 9 * 9 * 8;
 
+bool is_debug;
+
 int getConstInt(const Value* v) {
   auto cv = dynamic_cast<const ConstantInt*>(v);
   assert(cv);
@@ -141,8 +143,8 @@ private:
 
       for (const BasicBlock& block : func.getBasicBlockList()) {
         block_map_.insert(make_pair(&block, block_id));
-        block_id++;
         for (const Instruction& inst : block.getInstList()) {
+          block_map_.insert(make_pair(&inst, block_id));
           id_map_.insert(make_pair(&inst, id));
           id++;
 
@@ -157,11 +159,11 @@ private:
                 func->getName() != "puts" &&
                 func->getName() != "exit") {
               assert(inst.getNextNode());
-              block_map_.insert(make_pair(&inst, block_id));
               block_id++;
             }
           }
         }
+        block_id++;
       }
 
       local_size_map_[&func] = id;
@@ -184,19 +186,23 @@ private:
       for (const Argument& arg : func.getArgumentList())
         set(LOCAL, id_map_[&arg]);
 
+      const Instruction* last_inst = NULL;
       for (const BasicBlock& block : func.getBasicBlockList()) {
-        sprintf(buf, "block %d", block_map_[&block]);
-        bef_.push_back(indent + buf);
-        for (const Instruction& inst : block.getInstList()) {
-          ostringstream oss;
-          raw_os_ostream ros(oss);
-          inst.print(ros);
-          bef_.push_back(indent + oss.str().substr(0, oss.str().find('\n')));
+        if (is_debug) {
+          sprintf(buf, "block %d", block_map_[&block]);
+          bef_.push_back(indent + buf);
+          for (const Instruction& inst : block.getInstList()) {
+            ostringstream oss;
+            raw_os_ostream ros(oss);
+            inst.print(ros);
+            bef_.push_back(indent + oss.str().substr(0, oss.str().find('\n')));
+          }
         }
 
         for (const Instruction& inst : block.getInstList()) {
           fprintf(stderr, "%u %s %d\n",
                   inst.getOpcode(), inst.getOpcodeName(), inst.hasMetadata());
+          last_inst = &inst;
           handleInstrcution(inst);
           if (inst.getOpcode() != Instruction::Br &&
               inst.getOpcode() != Instruction::Switch &&
@@ -207,7 +213,8 @@ private:
           code_ += ' ';
         }
 
-        emitBlock();
+        assert(last_inst);
+        emitBlock(*last_inst);
       }
     }
   }
@@ -229,7 +236,7 @@ private:
 
     setupGlobalVars();
 
-    emitCode(0);
+    emitCode(0, false);
     code_.clear();
 
     emitChar(6, bef_.size() - 1, '<');
@@ -259,15 +266,21 @@ private:
     }
   }
 
-  void emitBlock() {
-    bef_.push_back(">:#v_$");
-    bef_.push_back("v-1<  ");
-    emitCode(bef_.size() - 2);
-    emitChar(6, bef_.size() - 1, '^');
+  void emitBlock(const Value& block) {
+    int block_id = block_map_.at(&block);
+    bef_.push_back(">:#v_ >$");
+    bef_.push_back("v-1<>  1+^");
+    bef_.push_back("v   ^_^#:<");
+
+    genInt(block_id);
+    code_ += "-:0`!";
+    int y = bef_.size() - 3;
+    emitCode(y, true);
   }
 
-  void emitCode(int y) {
-    int x = 7;
+  void emitCode(int oy, bool is_block) {
+    int x = 10;
+    int y = oy;
     int dx = 1;
     for (char c : code_) {
       if (c == 'S' || c == 'G') {
@@ -279,7 +292,7 @@ private:
           x--;
           dx = -dx;
         }
-        if (x < 7 + kMargin && dx == -1) {
+        if (x < 10 + kMargin && dx == -1) {
           emitChar(x, y, 'v');
           emitChar(x, y + 1, '>');
           y++;
@@ -313,7 +326,7 @@ private:
         y++;
         x--;
         dx = -dx;
-      } else if (x == 7 && dx == -1) {
+      } else if (x == 10 && dx == -1) {
         emitChar(x, y, 'v');
         emitChar(x, y + 1, '>');
         y++;
@@ -325,12 +338,33 @@ private:
       x += dx;
     }
 
-    if (dx > 0) {
+    if (is_block) {
+      if (x > 75) {
+        if (dx > 0) {
+          emitChar(x, y, 'v');
+          emitChar(x, y + 1, '<');
+          y++;
+        }
+        x = 75;
+      }
       emitChar(x, y, 'v');
-      emitChar(x, y + 1, '<');
-      y++;
-      x--;
-      dx = -dx;
+      y = max(y + 1, oy + 2);
+      emitChar(x, y, '_');
+      emitChar(x + 1, y, '1');
+      emitChar(x + 2, y, '-');
+
+      if (oy + 3 != (int)bef_.size()) {
+        emitChar(0, bef_.size() - 1, 'v');
+        emitChar(9, bef_.size() - 1, '^');
+      }
+    } else {
+      if (dx > 0) {
+        emitChar(x, y, 'v');
+        emitChar(x, y + 1, '<');
+        y++;
+        x--;
+        dx = -dx;
+      }
     }
 
     code_.clear();
@@ -518,7 +552,7 @@ private:
     } else {
       auto found = block_map_.find(&ci);
       assert(found != block_map_.end());
-      int ret = found->second;
+      int ret = found->second + 1;
       genInt(ret);
       for (int i = ci.getNumArgOperands() - 1; i >= 0; i--)
         getLocal(ci.getArgOperand(i));
@@ -528,7 +562,7 @@ private:
       prepareBranch(NULL, &*blocks.begin());
 
       modifyLocalPointer(ci, '+');
-      emitBlock();
+      emitBlock(ci);
       modifyLocalPointer(ci, '-');
     }
   }
@@ -807,8 +841,16 @@ private:
 };
 
 int main(int argc, char* argv[]) {
+  const char* arg0 = argv[0];
+
+  if (!strcmp(argv[1], "-g")) {
+    is_debug = true;
+    argc--;
+    argv++;
+  }
+
   if (argc < 1) {
-    fprintf(stderr, "Usage: %s bitcode\n", argv[0]);
+    fprintf(stderr, "Usage: %s bitcode\n", arg0);
     return 1;
   }
 
