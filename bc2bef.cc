@@ -130,23 +130,15 @@ private:
       if (func.isDeclaration())
         continue;
 
-      int id = 0;
       func_map_[&func] = block_id;
 
       if (func.getName() == "main")
         entry_point = block_id;
 
-      for (const Argument& arg : func.getArgumentList()) {
-        id_map_.insert(make_pair(&arg, id));
-        id++;
-      }
-
       for (const BasicBlock& block : func.getBasicBlockList()) {
         block_map_.insert(make_pair(&block, block_id));
         for (const Instruction& inst : block.getInstList()) {
           block_map_.insert(make_pair(&inst, block_id));
-          id_map_.insert(make_pair(&inst, id));
-          id++;
 
           if (inst.getOpcode() == Instruction::Call) {
             const Function* func =
@@ -164,6 +156,66 @@ private:
           }
         }
         block_id++;
+      }
+    }
+
+    map<const Value*, int> ref_map;
+    for (const Function& func : module_->getFunctionList()) {
+      if (func.isDeclaration())
+        continue;
+
+      int id = 0;
+      for (const BasicBlock& block : func.getBasicBlockList()) {
+        for (const Instruction& inst : block.getInstList()) {
+          for (size_t i = 0; i < inst.getNumOperands(); i++) {
+            auto* o = dynamic_cast<const Instruction*>(inst.getOperand(i));
+            if (!o)
+              continue;
+            int rel = 1;
+            if (block_map_[&inst] != block_map_[o])
+              rel = 3;
+            else if (o->getNextNode() != &inst)
+              rel = 2;
+            else
+              rel = 1;
+            o->dump();
+            ref_map[o] = max(ref_map[o], rel);
+          }
+        }
+      }
+
+      local_size_map_[&func] = id;
+    }
+
+    for (const Function& func : module_->getFunctionList()) {
+      if (func.isDeclaration())
+        continue;
+
+      int id = 0;
+      for (const Argument& arg : func.getArgumentList()) {
+        id_map_.insert(make_pair(&arg, id));
+        id++;
+      }
+
+      for (const BasicBlock& block : func.getBasicBlockList()) {
+        int reg_id = -3;
+        for (const Instruction& inst : block.getInstList()) {
+          int rel = ref_map[&inst];
+          /*
+          if (rel == 0) {
+            id_map_.insert(make_pair(&inst, -1));
+          } else if (rel == 1) {
+            id_map_.insert(make_pair(&inst, -2));
+          } else
+          */
+          if (rel != 3) {
+            id_map_.insert(make_pair(&inst, reg_id));
+            reg_id--;
+          } else {
+            id_map_.insert(make_pair(&inst, id));
+            id++;
+          }
+        }
       }
 
       local_size_map_[&func] = id;
@@ -727,6 +779,19 @@ private:
   }
 
   void genInt(int v) {
+    if (v > 9 && v < 82) {
+      for (int i = 2; i < 10; i++) {
+        for (int j = i; j < 10; j++) {
+          if (i * j == v) {
+            code_ += '0' + i;
+            code_ += '0' + j;
+            code_ += '*';
+            return;
+          }
+        }
+      }
+    }
+
     char op = '+';
     if (v < 0) {
       v = -v;
@@ -804,25 +869,34 @@ private:
 
   void addr(MemType mt, int id) {
     if (mt == LOCAL) {
-      getLocalPointer();
-      genInt(id);
-      code_ += '+';
+      if (id < 0) {
+        int reg = 2 - id;
+        int y = reg % 2;
+        int x = reg / 2 + 3;
+        assert(x < 80);
+        genInt(x);
+        genInt(y);
+      } else {
+        getLocalPointer();
+        genInt(id);
+        code_ += '+';
+        make2D(mt);
+      }
     } else {
       int addr = kLocalPos + id;
       genInt(addr);
+      make2D(mt);
     }
   }
 
   void get(MemType mt, int id) {
     addr(mt, id);
-    make2D(mt);
     code_ += 'g';
   }
 
   void set(MemType mt, int id) {
     addr(mt, id);
-    make2D(mt);
-    code_ += "p";
+    code_ += 'p';
   }
 
   void convertUnsigned() {
