@@ -3,8 +3,19 @@ BefLisp
 
 Lisp implementation in Befunge
 
-beflisp.bef is the Lisp interpreter in Befunge, and bc2bef.cc is the
-translator from LLVM bit code to Befunge.
+[beflisp.bef](https://github.com/shinh/beflisp/blob/master/beflisp.bef)
+is the Lisp interpreter in Befunge. This Befunge code is generated
+from
+[lisp.c](https://github.com/shinh/beflisp/blob/master/lisp.c)
+with clang and
+[bc2bef.cc](https://github.com/shinh/beflisp/blob/master/bc2bef.cc),
+which is a translator 
+from LLVM bit code to Befunge.
+
+[beflisp2d.bef](https://github.com/shinh/beflisp/blob/master/beflisp2d.bef)
+is a joke extension of Lisp. You can use 2D S expression. See
+[fizzbuzz.l2d](https://github.com/shinh/beflisp/blob/master/fizzbuzz.l2d)
+for an example of 2D Lisp code.
 
 
 How to Use
@@ -36,6 +47,10 @@ How to Use
     200
     > (x 300)
     500
+
+To run 2D Lisp, use beflisp2d.bef:
+
+    $ ./befunge beflisp2d.bef < fizzbuzz.l2d
 
 
 Builtin Functions

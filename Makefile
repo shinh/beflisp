@@ -14,7 +14,7 @@ CFLAGS+=-O
 #TESTS+=hello
 endif
 
-TBINS:=$(TESTS:%=test/%) lisp
+TBINS:=$(TESTS:%=test/%) lisp lisp2d
 TOBJS:=$(TBINS:=.o)
 TASMS:=$(TBINS:=.s)
 TBEFS:=$(TBINS:=.bef)
@@ -39,7 +39,7 @@ $(TOBJS): %.o: %.c Makefile libef.h
 	clang -c $(CLANGFLAGS) -emit-llvm $< -o $@
 
 $(TBINS): %: %.c Makefile libef.h
-	gcc -g $(CFLAGS) $< -o $@
+	gcc -g -MD $(CFLAGS) $< -o $@
 
 $(TBEFS): %.bef: %.o bc2bef Makefile
 	./bc2bef -g $< > $@ 2> err || (cat err; rm $@; exit 1)
@@ -48,4 +48,6 @@ test: all
 	./test_bef.rb $(TESTS)
 
 clean:
-	rm -f $(ALL) err
+	rm -f $(ALL) err *.d
+
+-include *.d
