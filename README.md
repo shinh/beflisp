@@ -4,7 +4,7 @@ BefLisp
 Lisp implementation in Befunge
 
 [beflisp.bef](https://github.com/shinh/beflisp/blob/master/beflisp.bef)
-is the Lisp interpreter in Befunge. This Befunge code is generated
+is a Lisp interpreter in Befunge. This Befunge code is generated
 from
 [lisp.c](https://github.com/shinh/beflisp/blob/master/lisp.c)
 with clang and
