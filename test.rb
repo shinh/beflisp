@@ -23,6 +23,8 @@ COMMANDS = {
   'lisp.bef' => ['./befunge', 'lisp.bef'],
   'beflisp.bef' => ['./befunge', 'beflisp.bef'],
   'lisp' => ['./lisp'],
+  'makelisp.mk' => ['make', '-f', 'makelisp.mk'],
+  'makelisp2.mk' => ['make', '-f', 'makelisp2.mk'],
 }
 
 def getResult(cmd, line)
@@ -68,9 +70,9 @@ while line = lines[lineno += 1]
   end
 
   expected = getResult(COMMANDS[ref_lisp], $eval_test ? line : orig)
-  expected = expected.lines[-1].chomp
+  expected = expected.lines.to_a[-1].to_s.chomp
   output = getResult(COMMANDS[test_lisp], line)
-  actual = output.lines[-1].chomp
+  actual = output.lines.to_a[-1].to_s.chomp
 
   if expected == actual
     puts "#{orig}: OK (#{expected})"

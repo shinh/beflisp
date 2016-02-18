@@ -2,6 +2,7 @@
 
 def evalify(c)
   o = File.read('eval.l').sub(/; TEST.*/ms, '')
+  o.sub!(/;.*/, '')
   c.lines.each do |line|
     line.sub!(/;.*/, '')
     next if line =~ /^$/

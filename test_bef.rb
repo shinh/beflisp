@@ -19,6 +19,7 @@ ARGV.each do |test|
     input = test_case == test_path ? '' : File.read(test_case)
     expected = getResult([test_path], input)
     actual = getResult(['./befunge', "#{test_path}.bef"], input)
+    #actual = getResult(['./ccbi', "#{test_path}.bef"], input)
     #actual = getResult(['./cfunge', "#{test_path}.bef"], input)
     if expected == actual
       puts "#{test_case}: OK (#{expected.sub(/\n.*/ms, '...')})"

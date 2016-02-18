@@ -27,7 +27,7 @@ bc2bef.o: bc2bef.cc
 	g++ -c $(CXXFLAGS) $< -o $@
 
 bc2bef: bc2bef.o
-	g++ $(CXXFLAGS) $< -lLLVM-3.3 -o $@
+	g++ $(CXXFLAGS) $< -L/usr/lib/llvm-3.6/lib -lLLVM-3.6 -o $@
 
 befunge: befunge.cc
 	g++ $(CXXFLAGS) $< -o $@

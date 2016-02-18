@@ -13,7 +13,6 @@
 #include <utility>
 #include <vector>
 
-#include <llvm/ADT/OwningPtr.h>
 #include <llvm/ADT/StringRef.h>
 #include <llvm/Bitcode/ReaderWriter.h>
 #include <llvm/IR/BasicBlock.h>
@@ -28,7 +27,6 @@
 #include <llvm/Support/MemoryBuffer.h>
 #include <llvm/Support/raw_ostream.h>
 #include <llvm/Support/raw_os_ostream.h>
-#include <llvm/Support/system_error.h>
 
 using namespace llvm;
 using namespace std;
@@ -681,10 +679,7 @@ private:
          it != si.case_end();
          ++it) {
       prepareBranch(&si, it.getCaseSuccessor());
-      const IntegersSubset& ints = it.getCaseValueEx();
-      assert(ints.isSingleNumber());
-      assert(ints.isSingleNumbersOnly());
-      genInt(getConstInt(ints.getSingleNumber(0).toConstantInt()));
+      genInt(getConstInt(it.getCaseValue()));
       getLocal(si.getOperand(0));
       code_ += "-!S";
     }
@@ -929,16 +924,15 @@ int main(int argc, char* argv[]) {
   }
 
   LLVMContext context;
-  OwningPtr<MemoryBuffer> buf;
-
-  if (error_code ec = MemoryBuffer::getFile(argv[1], buf)) {
+  auto buf = MemoryBuffer::getFile(argv[1]);
+  if (error_code ec = buf.getError()) {
     fprintf(stderr, "Failed to read %s: %s\n", argv[1], ec.message().c_str());
   }
 
-  Module* module = ParseBitcodeFile(buf.get(), context);
-  fprintf(stderr, "%p\n", module);
+  auto module = parseBitcodeFile(buf.get()->getMemBufferRef(), context);
+  fprintf(stderr, "%p\n", module.get());
 
-  B2B b2b(module);
+  B2B b2b(module.get());
   b2b.run();
   for (size_t i = 0; i < b2b.befunge().size(); i++) {
     printf("%s\n", b2b.befunge()[i].c_str());
